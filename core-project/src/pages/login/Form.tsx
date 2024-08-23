@@ -9,13 +9,21 @@ import {
 } from "@chakra-ui/react";
 import { Button } from "../../components/Button";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-type formFileds = {
-  email: string;
-  password: string;
-};
+const schema = z.object({
+  email: z.string().email({
+    message: "formato de email inválido",
+  }),
+  password: z.string().min(8, {
+    message: "a senha deve conter no mínimo 8 caracteres",
+  }),
+});
 
-const onSubmit: SubmitHandler<formFileds> = async (data) => {
+type formFields = z.infer<typeof schema>;
+
+const onSubmit: SubmitHandler<formFields> = async (data) => {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   console.log(data);
 };
@@ -25,7 +33,9 @@ export function LoginForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<formFileds>();
+  } = useForm<formFields>({
+    resolver: zodResolver(schema),
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -38,13 +48,7 @@ export function LoginForm() {
             fontSize="0.875rem"
             id="userName"
             color="gray.400"
-            {...register("email", {
-              required: "O preenchimento do campo é obrigatório",
-              pattern: {
-                value: /^[^@]+@[^@]+\.[^@]+$/,
-                message: "Formato de email inválido",
-              },
-            })}
+            {...register("email")}
           />
           {errors.email && (
             <Box textColor="red.500">{errors.email.message}</Box>
@@ -58,13 +62,7 @@ export function LoginForm() {
             fontSize="0.875rem"
             id="password"
             placeholder="Enter your password"
-            {...register("password", {
-              required: "O preenchimento do campo é obrigatório",
-              minLength: {
-                value: 8,
-                message: "A senha deve conter no mínimo 8 caracteres",
-              },
-            })}
+            {...register("password")}
           />
           {errors.password && (
             <Box textColor="red.500">{errors.password.message}</Box>
